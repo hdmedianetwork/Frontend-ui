@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: var(--f-text);
+}
+
+:root {
+  --bg-color: #fffeff;
+  --p-color: #c3daa6;
+  --s-color: #69e0b1;
+  --d-color: #1c1f50;
+
+  --f-head: "Heebo", serif;
+  --f-sub: "Hind Madurai", serif;
+  --f-text: "Duru Sans", serif;
+}

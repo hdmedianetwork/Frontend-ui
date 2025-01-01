@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: var(--f-text);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow-y: hidden;
+}
+
+:root {
+  --bg-color: #ffffff;
+  --p-color: #8aaae5;
+
+  --s-color: #000000;
+  --d-color: #000000;
+
+  --f-head: "Heebo", serif;
+  --f-sub: "Hind Madurai", serif;
+  --f-text: "Duru Sans", serif;
+}
+
+.one::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background-image: url("/assets/one.jpg");
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px);
+  filter: brightness(0.5);
+  z-index: 1;
+}
+.two::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background-image: url("/assets/two.jpg");
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px);
+  filter: brightness(0.5);
+  z-index: 1;
+}
