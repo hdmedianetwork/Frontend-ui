@@ -25,10 +25,11 @@ body {
 
   --f-head: "Heebo", serif;
   --f-sub: "Hind Madurai", serif;
-  --f-text: "Duru Sans", serif;
+  /* --f-text: ; */
 }
 
 .one::before {
+  font-family: "Times New Roman", Times, serif;
   content: "";
   position: absolute;
   top: 50%;

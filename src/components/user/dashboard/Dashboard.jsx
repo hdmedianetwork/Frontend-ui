@@ -12,15 +12,32 @@ import {
   getUserData,
   getAccessToken,
   logout,
+  fetchUserQna,
 } from "../../../services/api.js";
+import Toast from "typescript-toastify";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [qna, setQna] = useState(null);
   // const [currentPage, setCurrentPage] = useState(0);
   // const questionsPerPage = 5;
+
+  const showToast = (message, type = "error") => {
+    new Toast({
+      position: "bottom-right",
+      toastMsg: message,
+      autoCloseTime: 1000,
+      canClose: true,
+      showProgress: true,
+      pauseOnHover: true,
+      pauseOnFocusLoss: true,
+      type: type,
+      theme: "light",
+    });
+  };
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -44,7 +61,6 @@ export const Dashboard = () => {
             throw new Error("Failed to fetch user data");
           }
         }
-
         // Format the user data for display
         setUser({
           name: userData.name,
@@ -54,9 +70,19 @@ export const Dashboard = () => {
           role: userData.role,
           status: userData.status,
         });
+
+        const response = await fetchUserQna();
+        if (response.success) {
+          let userQna = response.qna_list.slice(0, 20);
+          setQna(userQna);
+          console.log(userQna);
+        } else {
+          throw new Error("Failed to get user qna");
+        }
       } catch (err) {
         console.error("Error loading user data:", err);
-        setError("Failed to load user data");
+        showToast(err.message || "Failed to load user data");
+        // setError("Failed to load user data");
         // If there's an error, logout and redirect to login
         logout();
         navigate("/login");
@@ -97,23 +123,12 @@ export const Dashboard = () => {
   return (
     <div className="p-8 space-y-6 max-w-7xl mx-auto flex flex-col gap-11">
       {/* Profile Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-8">
-          <img
-            src={user.profileImage}
-            alt="Profile"
-            className="h-28 w-28 rounded-full object-cover shadow-lg"
-          />
-          <div>
-            <h2 className="text-4xl font-bold text-gray-900">{user.name}</h2>
-            <p className="text-lg text-gray-600">{user.email}</p>
-            <p className="text-lg text-gray-600">{user.phone_number}</p>
-            <p className="text-lg text-gray-600 capitalize">{user.role}</p>
-            <p className="text-sm text-gray-400 capitalize">
-              Status: {user.status}
-            </p>
-          </div>
-        </div>
+      {/* Welcome Message */}
+      <div className="text-center space-y-3">
+        <h1 className="text-3xl font-bold text-gray-800">
+          Welcome back, <span className="text-blue-600">{user.name}</span>!
+        </h1>
+        <p className="text-lg text-gray-600">We're glad to have you here.</p>
       </div>
 
       {/* Interview Reports Section */}
@@ -157,7 +172,7 @@ export const Dashboard = () => {
         <h3 className="text-2xl font-semibold mb-4">
           Interview Questions Review
         </h3>
-        <QuestionsTable />
+        <QuestionsTable qna={qna} />
       </div>
     </div>
   );

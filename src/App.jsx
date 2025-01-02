@@ -28,12 +28,10 @@ const RoutesWrapper = () => {
   const location = useLocation();
   const [isNavbarOpen, setIsNavbarOpen] = useState(true);
 
- 
   const toggleNavbar = () => {
     setIsNavbarOpen((prev) => !prev);
   };
 
- 
   const showNavbar =
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/user");
@@ -46,7 +44,7 @@ const RoutesWrapper = () => {
     <div className="app h-screen w-screen bg-bg-color overflow-x-hidden">
       <div className="flex">
         {showNavbar && isNavbarOpen && <Navbar toggleNavbar={toggleNavbar} />}
-      
+
         {!hideHorizontalNavbar && (
           <HorizontalNavbar toggleNavbar={toggleNavbar} />
         )}
@@ -55,7 +53,6 @@ const RoutesWrapper = () => {
             showNavbar && isNavbarOpen ? "ml-56 mt-20 mr-4" : "ml-0 "
           } ${!hideHorizontalNavbar ? " mt-20 " : "  "} flex-1 transition-all `}
         >
-
           {!isNavbarOpen && (
             <button
               onClick={toggleNavbar}
@@ -65,7 +62,6 @@ const RoutesWrapper = () => {
             </button>
           )}
           <Routes>
-
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -77,7 +73,6 @@ const RoutesWrapper = () => {
             <Route path="/user/payment" element={<Pay />} />
             <Route path="/user/upload-Resume" element={<Resume />} />
             <Route path="/user/schedule" element={<Schedule />} />
-
 
             <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/history" element={<History />} />

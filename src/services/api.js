@@ -298,3 +298,37 @@ export const uploadResume = async (file) => {
     throw error;
   }
 };
+export const fetchUserQna = async () => {
+  try {
+    const token = sessionStorage.getItem("userAccessToken");
+    if (!token) {
+      throw new Error("No access token found");
+    }
+
+    const response = await fetch(`${BASE_URL}/dashboard/get-user-qna`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    const data = await response.json();
+    console.log("User Info Response:", data);
+
+    if (response.status === 200) {
+      const userQna = {
+        ...data.data,
+        isActive: data.isActive,
+      };
+      sessionStorage.setItem("userData", JSON.stringify(userQna));
+      return data;
+    }
+
+    throw new Error(data.message || "Failed to fetch user Qna");
+  } catch (error) {
+    console.error("Error fetching user QNA:", error);
+    throw error;
+  }
+};

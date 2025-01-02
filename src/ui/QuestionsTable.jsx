@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const QuestionsTable = () => {
+const QuestionsTable = ({ qna }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const questionsPerPage = 5;
 
@@ -10,13 +10,12 @@ const QuestionsTable = () => {
     id: i + 1,
     question: `Sample Question ${i + 1}`,
     userAnswer: `User's answer for question ${i + 1}...`,
-    betterAnswer: `A more comprehensive answer would include...`,
-    type: i % 2 === 0 ? "Technical" : "Behavioral",
-    difficulty: i % 3 === 0 ? "Easy" : i % 3 === 1 ? "Medium" : "Hard",
+
+    score: Math.floor(Math.random() * 10),
   }));
 
-  const totalPages = Math.ceil(mockQuestions.length / questionsPerPage);
-  const paginatedQuestions = mockQuestions.slice(
+  const totalPages = Math.ceil(qna.length / questionsPerPage);
+  const paginatedQuestions = qna.slice(
     currentPage * questionsPerPage,
     (currentPage + 1) * questionsPerPage
   );
@@ -29,16 +28,16 @@ const QuestionsTable = () => {
             {/* Mobile View */}
             <div className="block sm:hidden">
               {paginatedQuestions.map((q) => (
-                <div key={q.id} className="p-4 border-b border-gray-200">
+                <div key={q.qna_id} className="p-4 border-b border-gray-200">
                   <div className="flex justify-between mb-2">
                     <span className="text-xs font-medium text-gray-500">
-                      {q.type} • {q.difficulty}
+                      {q.qna_id}
                     </span>
                   </div>
                   <div className="space-y-3">
                     <div>
                       <h4 className="text-sm font-medium text-gray-900">
-                        {q.question}
+                        {q.question_asked}
                       </h4>
                     </div>
                     <div>
@@ -46,15 +45,15 @@ const QuestionsTable = () => {
                         Your Answer:
                       </p>
                       <p className="text-sm text-gray-900 mt-1">
-                        {q.userAnswer}
+                        {q.answer_given || "No answer given"}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500">
-                        Better Answer:
+                        Score:
                       </p>
                       <p className="text-sm text-gray-900 mt-1">
-                        {q.betterAnswer}
+                        {q.score !== null ? q.score : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -67,39 +66,27 @@ const QuestionsTable = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                    Question Asked
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Difficulty
+                    Answer
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Question
-                  </th>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Your Answer
-                  </th>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Better Answer
+                    Score
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedQuestions.map((q) => (
-                  <tr key={q.id} className="hover:bg-gray-50">
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {q.type}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {q.difficulty}
+                  <tr key={q.qna_id} className="hover:bg-gray-50">
+                    <td className="px-3 md:px-6 py-4 whitespace-normal text-sm text-gray-500 break-words">
+                      {q.question_asked}
                     </td>
                     <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                      {q.question}
+                      {q.answer_given || "No answer given"}
                     </td>
                     <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                      {q.userAnswer}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                      {q.betterAnswer}
+                      {q.score !== null ? q.score : "N/A"}
                     </td>
                   </tr>
                 ))}

@@ -10,9 +10,9 @@ export default {
         "d-color": "var(--d-color)", // Custom dark color
       },
       fontFamily: {
-        head: ["Heebo", "serif"],
-        sub: ["Hind Madurai", "serif"],
-        text: ["Duru Sans", "serif"],
+        head: ["Times New Roman", "Times", "serif"],
+        sub: ["Times New Roman", "Times", "serif"],
+        text: ["Times New Roman", "Times", "serif"],
       },
       animation: {
         fadeIn: "fadeIn 0.5s ease-in",

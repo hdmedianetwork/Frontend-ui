@@ -3,6 +3,7 @@ import { Password } from "../../ui/Password";
 import google from "/assets/google.png";
 import { loginUser, fetchUserInfo } from "../../services/api";
 import { useState } from "react";
+import Toast from "typescript-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,6 +11,20 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const showToast = (message, type = "error") => {
+    new Toast({
+      position: "top-left",
+      toastMsg: message,
+      autoCloseTime: 300,
+      canClose: true,
+      showProgress: true,
+      pauseOnHover: true,
+      pauseOnFocusLoss: true,
+      type: type,
+      theme: "light",
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,33 +43,40 @@ const Login = () => {
         // Verify we have the token before proceeding
         const token = sessionStorage.getItem("userAccessToken");
         if (!token) {
-          throw new Error("Login successful but no token received");
+          showToast("Login successful but no token received");
+          // throw new Error("Login successful but no token received");
+          return;
         }
 
         const userInfo = await fetchUserInfo();
         console.log("User Info:", userInfo);
+        showToast("Login successfull Redirecting...", "success");
 
-        if (userInfo.data.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/user/dashboard");
-        }
+        setTimeout(() => {
+          if (userInfo.data.role === "admin") {
+            navigate("/admin/dashboard");
+          } else {
+            navigate("/user/dashboard");
+          }
+        }, 1000);
       } else {
         const errorMessage =
           loginData.message || "Login failed due to unexpected error.";
-        setError(errorMessage);
+        showToast(errorMessage);
+        // setError(errorMessage);
       }
     } catch (err) {
       console.error("Login Error:", err);
+      showToast(err.message || "Something went wrong. Please try again.");
 
-      setError(err.message || "Something went wrong. Please try again.");
+      // setError(err.message || "Something went wrong. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Form Section - Left Half */}
-      <div className="w-1/2 bg-bg-color flex items-center justify-center p-8 animate-fadeIn">
+      <div className="w-full bg-bg-color flex items-center justify-center  animate-fadeIn">
         <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
           <div className="logo">
             <h1 className="text-2xl font-head text-d-color mb-6 text-center">
@@ -65,11 +87,12 @@ const Login = () => {
             Login
           </h2>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {/*{error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
               {error}
             </div>
-          )}
+          )}*/}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block font-sub text-d-color mb-2">Email</label>
@@ -109,8 +132,8 @@ const Login = () => {
       </div>
 
       {/* Content Section - Right Half */}
-      <div className="w-1/2 bg-p-color text-bg-color flex items-center animate-fadeIn two relative">
-        <div className=" z-10 p-12">
+      <div className="w-full lg:w--full bg-p-color text-bg-color flex items-center p-4 sm:p-6 lg:p-12 animate-fadeIn order-1 lg:order-2 min-h-[300px] lg:min-h-screen relative two">
+        <div className=" z-10  w-full">
           <h1 className="text-4xl font-head mb-6">Welcome Back!</h1>
           <p className="font-sub text-lg mb-8">
             Practice your interview skills with our AI-powered platform. Get

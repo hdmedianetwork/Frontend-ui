@@ -2,7 +2,7 @@ import { AlertCircle, FileText, Upload, X } from "lucide-react";
 import { useState } from "react";
 import { useCallback } from "react";
 import { isValidFileType } from "../../../utils/validation";
-
+import Toast from "typescript-toastify";
 import { uploadResume } from "../../../services/api";
 
 export const Resume = () => {
@@ -13,6 +13,20 @@ export const Resume = () => {
   const [isUploaded, setIsUploaded] = useState(false);
   const [uploadedFileDetails, setUploadedFileDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const showToast = (message, type = "error") => {
+    new Toast({
+      position: "bottom-right",
+      toastMsg: message,
+      autoCloseTime: 1000,
+      canClose: true,
+      showProgress: true,
+      pauseOnHover: true,
+      pauseOnFocusLoss: true,
+      type: type,
+      theme: "light",
+    });
+  };
 
   const handleFile = async (file) => {
     if (file) {
@@ -31,15 +45,18 @@ export const Resume = () => {
           setIsLoading(false);
 
           if (response.error === null) {
-            setSuccessMessage("Thank you for your feedback!");
+            showToast("File uploaded scuccessfully", "success");
+            // setSuccessMessage("Thank you for your feedback!");
           }
         } catch (err) {
-          setError(err.message);
+          showToast(err.message);
+          // setError(err.message);
           setIsLoading(false);
           setSelectedFile(null);
         }
       } else {
-        setError("Please upload a file in .pdf or .docx format.");
+        showToast("Please upload a file in .pdf or .docx format.", "warning");
+        // setError("Please upload a file in .pdf or .docx format.");
         setSelectedFile(null);
       }
     }
@@ -74,7 +91,8 @@ export const Resume = () => {
 
   const validateFileAndNavigate = (path) => {
     if (!selectedFile) {
-      setError("Please upload your resume before proceeding.");
+      showToast("Please upload your resume before proceeding.", "warning");
+      // setError("Please upload your resume before proceeding.");
       return;
     }
     window.location.href = path;
@@ -166,7 +184,7 @@ export const Resume = () => {
             </div>
           )}
 
-          {error && (
+          {/* {error && (
             <div className="mt-4 p-4 bg-red-50 rounded-lg flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-500" />
               <p className="text-red-700">{error}</p>
@@ -176,7 +194,7 @@ export const Resume = () => {
             <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
               {successMessage}
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Action Buttons */}
@@ -190,6 +208,7 @@ export const Resume = () => {
           </Button> */}
           <button
             onClick={() => validateFileAndNavigate("/user/schedule")}
+            disabled="true"
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
           >
             Schedule Interview
@@ -197,6 +216,7 @@ export const Resume = () => {
           <button
             onClick={() => validateFileAndNavigate("/user/interview")}
             className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
+            disabled={!isUploaded}
           >
             Instant Interview
           </button>
