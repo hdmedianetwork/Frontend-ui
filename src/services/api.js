@@ -69,7 +69,6 @@ export const createUser = async (userData) => {
  */
 export const loginUser = async (credentials) => {
   try {
-    // Make the API call for login
     const response = await fetch(`${BASE_URL}/users/login`, {
       method: "POST",
       headers: {
@@ -85,25 +84,39 @@ export const loginUser = async (credentials) => {
     const data = await response.json();
     console.log("Login API Response:", data);
 
-    if (response.status === 200 && data.data) {
+    if (response.status === 200 && data.success) {
+      // Store auth tokens
       sessionStorage.setItem("userAccessToken", data.data.access_token);
       sessionStorage.setItem("tokenType", data.data.token_type);
       sessionStorage.setItem("userEmail", data.data.email_id);
 
-      const userInfo = {
-        email: data.data.email_id,
-        isActive: data.isActive,
-      };
-      sessionStorage.setItem("userData", JSON.stringify(userInfo));
+      // Immediately fetch user info after successful login
+      try {
+        const userInfoResponse = await fetchUserInfo();
+        if (userInfoResponse.success) {
+          // Store the complete user data, correctly extracting from nested structure
+          const userDataToStore = {
+            id: userInfoResponse.data.id,
+            email: userInfoResponse.data.email,
+            name: userInfoResponse.data.name,
+            phone_number: userInfoResponse.data.phone_number,
+            profile_path: userInfoResponse.data.profile_path,
+            role: userInfoResponse.data.role || "user",
+            status: userInfoResponse.data.status || "active",
+            isActive: userInfoResponse.isActive,
+          };
+          sessionStorage.setItem("userData", JSON.stringify(userDataToStore));
+        }
+      } catch (userInfoError) {
+        console.error("Error fetching user info after login:", userInfoError);
+      }
 
       return data;
     }
 
-    // If login fails (for any non-200 status), throw an error with the response message
     throw new Error(data.message || "Login failed");
   } catch (error) {
     console.error("Login error:", error);
-
     throw error;
   }
 };
@@ -130,8 +143,13 @@ export const isAuthenticated = () => {
  * @returns {Object|null} The user data if available, or null
  */
 export const getUserData = () => {
-  const userData = sessionStorage.getItem("userData");
-  return userData ? JSON.parse(userData) : null;
+  try {
+    const userData = sessionStorage.getItem("userData");
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error("Error parsing user data from sessionStorage:", error);
+    return null;
+  }
 };
 
 /**
@@ -168,12 +186,19 @@ export const fetchUserInfo = async () => {
     const data = await response.json();
     console.log("User Info Response:", data);
 
-    if (response.status === 200) {
-      const userInfo = {
-        ...data.data,
+    if (response.status === 200 && data.success) {
+      // Store the complete user data
+      const userDataToStore = {
+        id: data.data.id,
+        email: data.data.email,
+        name: data.data.name,
+        phone_number: data.data.phone_number,
+        profile_path: data.data.profile_path,
+        role: data.data.role || "user",
+        status: data.data.status || "active",
         isActive: data.isActive,
       };
-      sessionStorage.setItem("userData", JSON.stringify(userInfo));
+      sessionStorage.setItem("userData", JSON.stringify(userDataToStore));
       return data;
     }
 
@@ -196,8 +221,6 @@ export const updateUserInfo = async (userData) => {
       throw new Error("No access token found");
     }
 
-    console.log("User data to update:", userData);
-
     const response = await fetch(`${BASE_URL}/users/update-user-info`, {
       method: "PUT",
       headers: {
@@ -210,16 +233,20 @@ export const updateUserInfo = async (userData) => {
 
     const data = await response.json();
 
-    if (response.status === 200) {
-      const updatedUserInfo = {
+    if (response.status === 200 && data.success) {
+      // Get current user data
+      const currentUserData = getUserData() || {};
+
+      // Update with new data while preserving existing fields
+      const userDataToStore = {
+        ...currentUserData,
         ...data.data,
         isActive: data.isActive,
       };
-      sessionStorage.setItem("userData", JSON.stringify(updatedUserInfo));
+      sessionStorage.setItem("userData", JSON.stringify(userDataToStore));
       return data;
     }
 
-    console.error("Error response from server:", data);
     throw new Error(data.message || "Failed to update user info");
   } catch (error) {
     console.error("Error updating user info:", error);
@@ -315,7 +342,7 @@ export const fetchUserQna = async () => {
     });
 
     const data = await response.json();
-    console.log("User Info Response:", data);
+    console.log("User question Response:", data);
 
     if (response.status === 200) {
       const userQna = {
@@ -330,5 +357,38 @@ export const fetchUserQna = async () => {
   } catch (error) {
     console.error("Error fetching user QNA:", error);
     throw error;
+  }
+};
+export const loadInitialUserData = async () => {
+  try {
+    const token = getAccessToken();
+    if (!token) {
+      return null;
+    }
+
+    // Try to get cached data first
+    let userData = getUserData();
+
+    // If no cached data or it's incomplete, fetch fresh data
+    if (!userData || !userData.name) {
+      const response = await fetchUserInfo();
+      if (response.success) {
+        userData = {
+          id: response.data.id,
+          email: response.data.email,
+          name: response.data.name,
+          phone_number: response.data.phone_number,
+          profile_path: response.data.profile_path,
+          role: response.data.role || "user",
+          status: response.data.status || "active",
+          isActive: response.isActive,
+        };
+      }
+    }
+
+    return userData;
+  } catch (error) {
+    console.error("Error loading initial user data:", error);
+    return null;
   }
 };

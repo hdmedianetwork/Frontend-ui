@@ -7,6 +7,7 @@ import {
   logout,
   updateUserInfo,
   updateProfilePath,
+  loadInitialUserData,
 } from "../../../services/api.js";
 import { useNavigate } from "react-router-dom";
 import Toast from "typescript-toastify";
@@ -59,16 +60,24 @@ export const Userprofile = () => {
           return;
         }
 
-        let userData = getUserData();
+        // let userData = getUserData();
 
+        // if (!userData) {
+        //   const response = await fetchUserInfo();
+        //   if (response.success) {
+        //     userData = response.data;
+        //   } else {
+        //     throw new Error("Failed to fetch user data");
+        //   }
+        // }
+        // Load user data using the new function
+
+        const userData = await loadInitialUserData();
         if (!userData) {
-          const response = await fetchUserInfo();
-          if (response.success) {
-            userData = response.data;
-          } else {
-            throw new Error("Failed to fetch user data");
-          }
+          navigate("/login");
+          return;
         }
+
         setUser({
           id: userData.id,
           name: userData.name,

@@ -13,6 +13,7 @@ import {
   getAccessToken,
   logout,
   fetchUserQna,
+  loadInitialUserData,
 } from "../../../services/api.js";
 import Toast from "typescript-toastify";
 
@@ -39,59 +40,104 @@ export const Dashboard = () => {
     });
   };
 
+  // useEffect(() => {
+  //   const loadUserData = async () => {
+  //     try {
+  //       // Check if we have an access token
+  //       const token = getAccessToken();
+  //       if (!token) {
+  //         navigate("/login");
+  //         return;
+  //       }
+
+  //       // Try to get user data from sessionStorage first
+  //       let userData = getUserData();
+
+  //       // If no data in sessionStorage, fetch from API
+  //       if (!userData) {
+  //         const response = await fetchUserInfo();
+  //         if (response.success) {
+  //           userData = response.data;
+  //         } else {
+  //           throw new Error("Failed to fetch user data");
+  //         }
+  //       }
+  //       // Format the user data for display
+  //       setUser({
+  //         name: userData.name,
+  //         email: userData.email,
+  //         phone_number: userData.phone_number,
+  //         profileImage: userData.profile_path || "/assets/profile.png",
+  //         role: userData.role,
+  //         status: userData.status,
+  //       });
+
+  //       const response = await fetchUserQna();
+  //       if (response.success) {
+  //         let userQna = response.qna_list.slice(0, 20);
+  //         setQna(userQna);
+  //         console.log(userQna);
+  //       } else {
+  //         throw new Error("Failed to get user qna");
+  //       }
+  //     } catch (err) {
+  //       console.error("Error loading user data:", err);
+  //       showToast(err.message || "Failed to load user data");
+  //       // setError("Failed to load user data");
+  //       // If there's an error, logout and redirect to login
+  //       logout();
+  //       navigate("/login");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   loadUserData();
+  // }, [navigate]);
+
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadDashboardData = async () => {
       try {
-        // Check if we have an access token
-        const token = getAccessToken();
-        if (!token) {
+        setLoading(true);
+
+        // Load user data using the new function
+        const userData = await loadInitialUserData();
+        if (!userData) {
           navigate("/login");
           return;
         }
 
-        // Try to get user data from sessionStorage first
-        let userData = getUserData();
-
-        // If no data in sessionStorage, fetch from API
-        if (!userData) {
-          const response = await fetchUserInfo();
-          if (response.success) {
-            userData = response.data;
-          } else {
-            throw new Error("Failed to fetch user data");
-          }
-        }
-        // Format the user data for display
+        // Set user state with the correct data structure
         setUser({
+          id: userData.id,
           name: userData.name,
           email: userData.email,
           phone_number: userData.phone_number,
           profileImage: userData.profile_path || "/assets/profile.png",
-          role: userData.role,
-          status: userData.status,
+          role: userData.role || "user",
+          status: userData.status || "active",
+          isActive: userData.isActive,
         });
 
-        const response = await fetchUserQna();
-        if (response.success) {
-          let userQna = response.qna_list.slice(0, 20);
-          setQna(userQna);
-          console.log(userQna);
-        } else {
-          throw new Error("Failed to get user qna");
+        // Load QNA data
+        const qnaResponse = await fetchUserQna();
+        if (qnaResponse.success) {
+          setQna(qnaResponse.qna_list.slice(0, 20));
         }
       } catch (err) {
-        console.error("Error loading user data:", err);
-        showToast(err.message || "Failed to load user data");
-        // setError("Failed to load user data");
-        // If there's an error, logout and redirect to login
-        logout();
-        navigate("/login");
+        console.error("Error loading dashboard data:", err);
+        if (err.message.includes("token")) {
+          logout();
+          navigate("/login");
+        } else {
+          setError("Failed to load dashboard data");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    loadUserData();
+    loadDashboardData();
   }, [navigate]);
 
   const handleDownloadReport = (reportName) => {

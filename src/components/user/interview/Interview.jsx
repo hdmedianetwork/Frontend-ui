@@ -18,6 +18,7 @@ export const Interview = () => {
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
   const [chat, setChat] = useState([]);
   const [userAnswer, setUserAnswer] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (message, type = "error") => {
     new Toast({
@@ -155,6 +156,8 @@ export const Interview = () => {
   // };
   const handleSubmitAnswer = async (isAutoSubmit = false) => {
     // Ensure currentQuestionId is available before submitting an answer
+    if (isSubmitting) return;
+
     if (!currentQuestionId) {
       console.error("No question ID available");
       showToast("No question ID available. Please try again.", "warning");
@@ -166,6 +169,11 @@ export const Interview = () => {
     if (!userAnswer.trim() && !isAutoSubmit) return;
 
     try {
+      setIsSubmitting(true); // Set submission flag
+
+      const currentAnswer = userAnswer.trim(); // Store current answer
+      setUserAnswer(""); // Clear the input immediately to prevent resubmission
+
       const token = getAccessToken();
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/qna/submit-answer/`,
@@ -191,9 +199,13 @@ export const Interview = () => {
           ...prev,
           {
             sender: "User",
-            message: userAnswer.trim() || "No answer provided.",
+            message: currentAnswer || "No answer provided.",
           },
         ]);
+
+        // setUserAnswer(""); // Reset the input field for the next answer
+        setIsQuestionTimerRunning(false); // Reset the question timer
+        setQuestionTimer(60); // Reset timer to 60 seconds
 
         // If there's a next question, add it and update the state
         if (data.next_question) {
@@ -201,12 +213,13 @@ export const Interview = () => {
             ...prev,
             { sender: "Bot", message: data.next_question },
           ]);
-          showToast("Next quesion incoming", "info");
+
+          // showToast("Next quesion incoming", "info");
           // Update the question ID with the new one from the response (next_qna_id)
           setCurrentQuestionId(data.next_qna_id); // Update with next_qna_id
-          setUserAnswer(""); // Clear the user input field
-          setIsQuestionTimerRunning(false); // Reset question timer
-          setQuestionTimer(60); // Reset the question timer to 60 seconds
+          // setUserAnswer(""); // Clear the user input field
+          setIsQuestionTimerRunning(true); // Reset question timer
+          // setQuestionTimer(60); // Reset the question timer to 60 seconds
 
           // Optionally restart mic if it's enabled
           if (isRecording) {
@@ -225,40 +238,135 @@ export const Interview = () => {
       console.error("Error submitting answer:", error);
       showToast(error.message || "Failed to submit answer. Please try again.");
       // alert(error.message || "Failed to submit answer. Please try again.");
+    } finally {
+      setIsSubmitting(false); // Reset submission flag
     }
   };
 
-  const handleEndInterview = async () => {
+  // const handleEndInterview = async () => {
+  //   try {
+  //     const token = getAccessToken();
+  //     const storedSessionId = sessionStorage.getItem("interviewSessionId");
+
+  //     await fetch(`${import.meta.env.VITE_API_URL}/qna/end-interview/`, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         session_id: storedSessionId,
+  //       }),
+  //     });
+  //     showToast("Interview Ended", "info");
+  //     sessionStorage.removeItem("interviewSessionId");
+  //     setShowEndModal(true);
+  //   } catch (error) {
+  //     console.error("Error ending interview:", error);
+  //   }
+  // };
+
+  // Interview timer effect
+  const handleEndInterview = async (isTimerExpired = false) => {
     try {
+      // First, stop any active recording
+      if (isRecording) {
+        recognitionRef.current?.stop();
+        setIsRecording(false);
+      }
+
+      // Clear all timers
+      setIsQuestionTimerRunning(false);
+
+      // If there's a pending answer, submit it first
+      if (userAnswer.trim()) {
+        await handleSubmitAnswer(true);
+      }
+
       const token = getAccessToken();
       const storedSessionId = sessionStorage.getItem("interviewSessionId");
 
-      await fetch(`${import.meta.env.VITE_API_URL}/qna/end-interview/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          session_id: storedSessionId,
-        }),
-      });
-      showToast("Interview Ended", "info");
-      sessionStorage.removeItem("interviewSessionId");
-      setShowEndModal(true);
+      if (!storedSessionId) {
+        showToast("No active interview session found.", "warning");
+        setShowEndModal(true);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/qna/end-interview/`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              session_id: storedSessionId,
+              end_reason: isTimerExpired ? "timer_expired" : "user_ended",
+              last_question_id: currentQuestionId,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to end interview properly");
+        }
+
+        // Update chat with end message
+        setChat((prev) => [
+          ...prev,
+          {
+            sender: "Bot",
+            message: isTimerExpired
+              ? "Interview time has expired. Thank you for your participation!"
+              : "Interview ended. Thank you for your participation!",
+          },
+        ]);
+
+        // Clean up interview state
+        setIsInterviewStarted(false);
+        setCurrentQuestionId(null);
+        setUserAnswer("");
+
+        // Clear session storage
+        sessionStorage.removeItem("interviewSessionId");
+
+        // Show appropriate notification
+        showToast(
+          isTimerExpired
+            ? "Interview time expired"
+            : "Interview ended successfully",
+          isTimerExpired ? "warning" : "info"
+        );
+
+        // Show end modal
+        setShowEndModal(true);
+      } catch (error) {
+        console.error("Error in end-interview API call:", error);
+        showToast(error.message || "Error ending interview", "error");
+
+        // Show end modal even if API fails
+        setShowEndModal(true);
+      }
     } catch (error) {
-      console.error("Error ending interview:", error);
+      console.error("Error in handleEndInterview:", error);
+      showToast(
+        "Error during interview completion. Please contact support.",
+        "error"
+      );
+      setShowEndModal(true);
     }
   };
-
-  // Interview timer effect
   useEffect(() => {
     let interval;
     if (isInterviewStarted && interviewTimer > 0) {
       interval = setInterval(() => {
         setInterviewTimer((prev) => {
           if (prev <= 1) {
-            handleEndInterview();
+            handleEndInterview(true);
           }
           return prev - 1;
         });
@@ -274,6 +382,7 @@ export const Interview = () => {
       interval = setInterval(() => {
         setQuestionTimer((prev) => {
           if (prev <= 1) {
+            // setUserAnswer("");
             handleSubmitAnswer(true);
           }
           return prev - 1;
