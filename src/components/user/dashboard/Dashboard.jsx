@@ -123,6 +123,8 @@ export const Dashboard = () => {
         const qnaResponse = await fetchUserQna();
         if (qnaResponse.success) {
           setQna(qnaResponse.qna_list.slice(0, 20));
+        } else {
+          setQna([]); // If no QnA records, set as empty array
         }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
@@ -218,7 +220,13 @@ export const Dashboard = () => {
         <h3 className="text-2xl font-semibold mb-4">
           Interview Questions Review
         </h3>
-        <QuestionsTable qna={qna} />
+        {qna && qna.length > 0 ? (
+          <QuestionsTable qna={qna} />
+        ) : (
+          <div className="text-center text-gray-500">
+            {/* Show an empty div if no QnA records are found */}
+          </div>
+        )}
       </div>
     </div>
   );
