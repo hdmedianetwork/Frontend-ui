@@ -26,6 +26,7 @@ import {
   LogOut,
   Camera,
 } from "lucide-react";
+import FadeLoader from "react-spinners/FadeLoader";
 
 export const Userprofile = () => {
   const navigate = useNavigate();
@@ -36,11 +37,11 @@ export const Userprofile = () => {
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
-  const showToast = (message, type = "error") => {
+  const showToast = (message, type = "default") => {
     new Toast({
-      position: "bottom-right",
+      position: "top-center",
       toastMsg: message,
-      autoCloseTime: 1000,
+      autoCloseTime: 2000,
       canClose: true,
       showProgress: true,
       pauseOnHover: true,
@@ -155,7 +156,7 @@ export const Userprofile = () => {
       const response = await updateUserInfo(updatedUserData);
       if (response.success) {
         setUser(response.data);
-        showToast("Profile updated successfully!", "success");
+        showToast("Profile updated successfully!", "default");
 
         // alert("Profile updated successfully!");
       }
@@ -192,7 +193,12 @@ export const Userprofile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <FadeLoader
+          color={"#0626e4"}
+          size={150}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        />
       </div>
     );
   }
@@ -249,7 +255,7 @@ export const Userprofile = () => {
       </div>
 
       {/* Dashboard Sections */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card
           title={
             <div className="flex items-center gap-2">
@@ -257,13 +263,10 @@ export const Userprofile = () => {
               <span>Your Information</span>
             </div>
           }
-          onClick={() => handleCardClick("info")}
+          onClick={() => handleCardClick("default")}
           className="hover:shadow-lg transition-shadow"
         >
           <ul className="space-y-3">
-            <li className="flex items-center gap-3 text-gray-700">
-              <User size={16} /> <span>{user?.name}</span>
-            </li>
             <li className="flex items-center gap-3 text-gray-700">
               <Mail size={16} /> <span>{user?.email}</span>
             </li>
@@ -315,9 +318,28 @@ export const Userprofile = () => {
             </li>
           </ul>
         </Card>
+        <Card
+          title={
+            <div className="flex items-center gap-2">
+              <Settings className="text-p-color" size={20} />
+              <span>Change Password</span>
+            </div>
+          }
+          onClick={() => handleCardClick("pswd")}
+          className="hover:shadow-lg transition-shadow"
+        >
+          <ul className="space-y-3">
+            <li className="flex items-center gap-3 text-gray-700">
+              <Lock size={16} /> <span>Change Password</span>
+            </li>
+            <li className="flex items-center gap-3 text-gray-700">
+              <Shield size={16} /> <span>Privacy Settings</span>
+            </li>
+          </ul>
+        </Card>
       </div>
 
-      {expandedCard === "info" && (
+      {expandedCard === "default" && (
         <div className="mt-6 p-6 bg-white shadow-lg rounded-xl">
           <div className="flex items-center gap-2 mb-4">
             <User className="text-p-color" size={24} />
@@ -433,6 +455,71 @@ export const Userprofile = () => {
               </button>
             </li>
           </ul>
+        </div>
+      )}
+      {expandedCard === "pswd" && (
+        <div className="mt-6 p-6 bg-white shadow-lg rounded-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Edit className="text-p-color" size={24} />
+            <h3 className="text-2xl font-semibold text-gray-800">
+              Change Password
+            </h3>
+          </div>
+          <form onSubmit={handleUpdateSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="name"
+                className="flex items-center gap-2 text-lg text-gray-700"
+              >
+                <Lock size={16} /> Old Password
+              </label>
+              <input
+                type="password"
+                id="name"
+                name="name"
+                // defaultValue={user?.name}
+                className="mt-2 p-2 border border-gray-300 rounded-md w-full focus:border-p-color focus:ring-1 focus:ring-p-color outline-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="phone_number"
+                className="flex items-center gap-2 text-lg text-gray-700"
+              >
+                <Lock size={16} />
+                New Password
+              </label>
+              <input
+                type="password"
+                id="phone_number"
+                name="phone_number"
+                // defaultValue={user?.phone_number}
+                className="mt-2 p-2 border border-gray-300 rounded-md w-full focus:border-p-color focus:ring-1 focus:ring-p-color outline-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="email"
+                className="flex items-center gap-2 text-lg text-gray-700"
+              >
+                <Lock size={16} /> Confirm Password
+              </label>
+              <input
+                type="password"
+                id="email"
+                name="email"
+                // readOnly
+                // defaultValue={user?.email}
+                className="mt-2 p-2 border border-gray-300 rounded-md w-full focus:border-p-color focus:ring-1 focus:ring-p-color outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="flex items-center gap-2 mt-4 px-6 py-2 bg-p-color text-white rounded-md hover:bg-s-color transition-colors"
+            >
+              <Edit size={16} /> Save Changes
+            </button>
+          </form>
         </div>
       )}
     </div>

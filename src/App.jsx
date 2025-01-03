@@ -4,6 +4,7 @@ import { Navbar } from "./components/navbar/Navbar";
 import Home from "./pages/home/Home";
 import Login from "./components/login/Login";
 import Register from "./components/register/Register";
+import Forgot from "./components/forgot/Forgot";
 
 import { Dashboard } from "./components/user/dashboard/Dashboard";
 import { Userprofile } from "./components/user/userProfile/Userprofile";
@@ -38,7 +39,8 @@ const RoutesWrapper = () => {
   const hideHorizontalNavbar =
     location.pathname === "/" ||
     location.pathname === "/login" ||
-    location.pathname === "/register";
+    location.pathname === "/register" ||
+    location.pathname === "/forgot";
 
   return (
     <div className="app h-screen w-screen bg-bg-color overflow-x-hidden">
@@ -65,6 +67,7 @@ const RoutesWrapper = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot" element={<Forgot />} />
 
             <Route path="/user/dashboard" element={<Dashboard />} />
             <Route path="/user/profile" element={<Userprofile />} />

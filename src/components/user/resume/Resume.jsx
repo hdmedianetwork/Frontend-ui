@@ -14,11 +14,11 @@ export const Resume = () => {
   const [uploadedFileDetails, setUploadedFileDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const showToast = (message, type = "error") => {
+  const showToast = (message, type = "default") => {
     new Toast({
-      position: "bottom-right",
+      position: "top-center",
       toastMsg: message,
-      autoCloseTime: 1000,
+      autoCloseTime: 2000,
       canClose: true,
       showProgress: true,
       pauseOnHover: true,
@@ -45,7 +45,7 @@ export const Resume = () => {
           setIsLoading(false);
 
           if (response.error === null) {
-            showToast("File uploaded scuccessfully", "success");
+            showToast("File uploaded scuccessfully", "default");
             // setSuccessMessage("Thank you for your feedback!");
           }
         } catch (err) {
@@ -55,7 +55,7 @@ export const Resume = () => {
           setSelectedFile(null);
         }
       } else {
-        showToast("Please upload a file in .pdf or .docx format.", "warning");
+        showToast("Please upload a file in .pdf or .docx format.", "default");
         // setError("Please upload a file in .pdf or .docx format.");
         setSelectedFile(null);
       }
@@ -91,7 +91,7 @@ export const Resume = () => {
 
   const validateFileAndNavigate = (path) => {
     if (!selectedFile) {
-      showToast("Please upload your resume before proceeding.", "warning");
+      showToast("Please upload your resume before proceeding.", "default");
       // setError("Please upload your resume before proceeding.");
       return;
     }

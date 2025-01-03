@@ -16,6 +16,14 @@ export const mockInterviews = [
     topic: "System Design",
     report: "Interview_Report_20Mar.pdf",
   },
+  {
+    id: 3,
+    date: "2024-03-25",
+    score: 85,
+    duration: "30 mins",
+    topic: "Computer Networks",
+    report: "Interview_Report_25Mar.pdf",
+  },
 ];
 
 export const mockQuestions = Array.from({ length: 25 }, (_, i) => ({

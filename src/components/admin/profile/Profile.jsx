@@ -48,7 +48,10 @@ export const Profile = () => {
 
       {/* Dashboard Sections */}
       <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        <Card title="Your Information" onClick={() => handleCardClick("info")}>
+        <Card
+          title="Your Information"
+          onClick={() => handleCardClick("default")}
+        >
           <ul className="text-lg text-gray-700 space-y-2">
             <li>Name: {user.name}</li>
             <li>Email: {user.email}</li>
@@ -79,7 +82,7 @@ export const Profile = () => {
       </div>
 
       {/* Expanded Info Card */}
-      {expandedCard === "info" && (
+      {expandedCard === "default" && (
         <div className="mt-10 p-6 bg-white shadow-lg rounded-xl">
           <h3 className="text-2xl font-semibold text-gray-800">
             Full Information

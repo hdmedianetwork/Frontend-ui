@@ -26,11 +26,11 @@ export const Feedback = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const showToast = (message, type = "error") => {
+  const showToast = (message, type = "default") => {
     new Toast({
-      position: "bottom-right",
+      position: "top-center",
       toastMsg: message,
-      autoCloseTime: 1000,
+      autoCloseTime: 2000,
       canClose: true,
       showProgress: true,
       pauseOnHover: true,
@@ -70,7 +70,7 @@ export const Feedback = () => {
       const data = await response.json();
 
       if (response.status === 200) {
-        showToast("Thank you for your feedback!", "success");
+        showToast("Thank you for your feedback!", "default");
         // setSuccessMessage("Thank you for your feedback!");
         setFeedback("");
         setRating(0);

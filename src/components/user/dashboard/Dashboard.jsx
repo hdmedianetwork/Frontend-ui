@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../../../ui/Card";
 import { FileText } from "lucide-react";
 import QuestionsTable from "../../../ui/QuestionsTable";
+import FadeLoader from "react-spinners/FadeLoader";
 import {
   mockInterviews,
   // mockQuestions
@@ -26,11 +27,17 @@ export const Dashboard = () => {
   // const [currentPage, setCurrentPage] = useState(0);
   // const questionsPerPage = 5;
 
-  const showToast = (message, type = "error") => {
+  // const override: CSSProperties = {
+  //   display: "block",
+  //   margin: "0 auto",
+  //   borderColor: "red",
+  // };
+
+  const showToast = (message, type = "default") => {
     new Toast({
-      position: "bottom-right",
+      position: "top-center",
       toastMsg: message,
-      autoCloseTime: 1000,
+      autoCloseTime: 2000,
       canClose: true,
       showProgress: true,
       pauseOnHover: true,
@@ -149,7 +156,12 @@ export const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <FadeLoader
+          color={"#0626e4"}
+          size={150}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        />
       </div>
     );
   }

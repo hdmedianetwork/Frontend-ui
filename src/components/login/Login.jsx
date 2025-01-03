@@ -12,11 +12,11 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const showToast = (message, type = "error") => {
+  const showToast = (message, type = "default") => {
     new Toast({
       position: "top-left",
       toastMsg: message,
-      autoCloseTime: 300,
+      autoCloseTime: 1000,
       canClose: true,
       showProgress: true,
       pauseOnHover: true,
@@ -50,7 +50,7 @@ const Login = () => {
 
         const userInfo = await fetchUserInfo();
         console.log("User Info:", userInfo);
-        showToast("Login successfull Redirecting...", "success");
+        showToast("Login successfull Redirecting...", "default");
 
         setTimeout(() => {
           if (userInfo.data.role === "admin") {
@@ -58,7 +58,7 @@ const Login = () => {
           } else {
             navigate("/user/dashboard");
           }
-        }, 1000);
+        }, 2000);
       } else {
         const errorMessage =
           loginData.message || "Login failed due to unexpected error.";
@@ -77,9 +77,10 @@ const Login = () => {
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Form Section - Left Half */}
       <div className="w-full bg-bg-color flex items-center justify-center  animate-fadeIn">
-        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-          <div className="logo">
-            <h1 className="text-2xl font-head text-d-color mb-6 text-center">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg flex flex-col">
+          <div className="logo flex gap-3 items-center  content-center ">
+            <img src="/assets/logo.png" alt="" height={"45px"} width={"75px"} />
+            <h1 className="text-2xl font-head text-d-color text-center">
               AI INTERVIEW CHATBOT
             </h1>
           </div>

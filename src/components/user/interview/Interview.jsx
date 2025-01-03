@@ -1,30 +1,46 @@
 import { useState, useEffect, useRef } from "react";
 import { Mic, UserCircle2, PlayCircle, Clock } from "lucide-react";
 import { CustomModal } from "../../../ui/CustomModal";
-import { Button } from "../../../ui/Button";
 import { getAccessToken } from "../../../services/api";
 import Toast from "typescript-toastify";
+import { useNavigate } from "react-router-dom";
 
 export const Interview = () => {
-  // State management
+  const navigate = useNavigate();
+
+  // Core state
   const [showInstructions, setShowInstructions] = useState(true);
   const [showEndModal, setShowEndModal] = useState(false);
-  const [interviewTimer, setInterviewTimer] = useState(30 * 60);
-  const [questionTimer, setQuestionTimer] = useState(60);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
-  const [isQuestionTimerRunning, setIsQuestionTimerRunning] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
   const [chat, setChat] = useState([]);
+
+  // Answer handling state
   const [userAnswer, setUserAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(true);
 
-  const showToast = (message, type = "error") => {
+  // Timer state
+  const [interviewTimer, setInterviewTimer] = useState(30 * 60);
+  const [questionTimer, setQuestionTimer] = useState(60);
+  const [isQuestionTimerActive, setIsQuestionTimerActive] = useState(false);
+
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef(null);
+  const textAreaRef = useRef(null);
+  const chatEndRef = useRef(null);
+
+  // Submission lock mechanism
+  const submissionLockRef = useRef(false);
+  const currentQuestionRef = useRef(null);
+
+  const showToast = (message, type = "default") => {
     new Toast({
-      position: "bottom-right",
+      position: "top-center",
       toastMsg: message,
-      autoCloseTime: 1000,
+      autoCloseTime: 2000,
       canClose: true,
       showProgress: true,
       pauseOnHover: true,
@@ -34,12 +50,6 @@ export const Interview = () => {
     });
   };
 
-  // Refs
-  const textAreaRef = useRef(null);
-  const chatEndRef = useRef(null);
-  const recognitionRef = useRef(null);
-
-  // Start interview handler
   const handleStartInterview = async () => {
     try {
       const token = getAccessToken();
@@ -57,122 +67,44 @@ export const Interview = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Store session ID in sessionStorage
         setSessionId(data.session_id);
         sessionStorage.setItem("interviewSessionId", data.session_id);
 
-        // Set the first question ID (qna_id) here
         if (data.qna_id) {
-          console.log(data.qna_id);
-
-          setCurrentQuestionId(data.qna_id); // Update state with the received qna_id
-        } else {
-          console.error("No qna_id received from start-interview API");
-          return;
+          setCurrentQuestionId(data.qna_id);
+          currentQuestionRef.current = data.qna_id;
+          setChat([{ sender: "Bot", message: data.question }]);
+          setIsInterviewStarted(true);
+          setShowInstructions(false);
+          setIsQuestionTimerActive(true);
+          showToast("Interview Started", "default");
         }
-
-        // Add the first question to chat
-        setChat([{ sender: "Bot", message: data.question }]);
-
-        // Mark the interview as started and hide instructions
-        showToast("Interview Started", "info");
-        setIsInterviewStarted(true);
-        setShowInstructions(false);
       } else {
         throw new Error(data.message || "Failed to start interview");
       }
     } catch (error) {
       console.error("Error starting interview:", error);
-      showToast(
-        error.message || "Failed to start interview. Please try again."
-      );
-      // alert(error.message || "Failed to start interview. Please try again.");
+      showToast(error.message || "Failed to start interview");
     }
   };
 
-  // const handleSubmitAnswer = async (isAutoSubmit = false) => {
-  //   if (!currentQuestionId) {
-  //     console.error("No question ID available");
-  //     return;
-  //   }
-
-  //   if (!userAnswer.trim() && !isAutoSubmit) return;
-
-  //   try {
-  //     const token = getAccessToken();
-  //     const response = await fetch(
-  //       `${import.meta.env.VITE_API_URL}/qna/submit-answer/`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           qna_id: currentQuestionId,
-  //           user_answer: userAnswer.trim() || "No answer provided.",
-  //           session_id: sessionStorage.getItem("interviewSessionId"),
-  //         }),
-  //       }
-  //     );
-
-  //     const data = await response.json();
-
-  //     if (response.ok) {
-  //       // Add user's answer to chat
-  //       setChat((prev) => [
-  //         ...prev,
-  //         {
-  //           sender: "User",
-  //           message: userAnswer.trim() || "No answer provided.",
-  //         },
-  //       ]);
-
-  //       // If there's a next question, add it and update state
-  //       if (data.next_question) {
-  //         setChat((prev) => [
-  //           ...prev,
-  //           { sender: "Bot", message: data.next_question },
-  //         ]);
-  //         setCurrentQuestionId(data.qna_id);
-  //         setUserAnswer("");
-  //         setIsQuestionTimerRunning(false);
-  //         setQuestionTimer(60);
-
-  //         if (isRecording) {
-  //           handleMicClick();
-  //         }
-  //       } else if (data.is_complete) {
-  //         // Only end interview if explicitly marked as complete
-  //         handleEndInterview();
-  //       }
-  //     } else {
-  //       throw new Error(data.message || "Failed to submit answer");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error submitting answer:", error);
-  //     alert(error.message || "Failed to submit answer. Please try again.");
-  //   }
-  // };
   const handleSubmitAnswer = async (isAutoSubmit = false) => {
-    // Ensure currentQuestionId is available before submitting an answer
-    if (isSubmitting) return;
-
-    if (!currentQuestionId) {
-      console.error("No question ID available");
-      showToast("No question ID available. Please try again.", "warning");
-      // alert("No question ID available. Please try again.");
+    if (submissionLockRef.current || isSubmitting || !canSubmit) {
       return;
     }
 
-    // Skip submission if there's no answer and auto-submit is not enabled
-    if (!userAnswer.trim() && !isAutoSubmit) return;
+    const currentAnswer = userAnswer.trim();
+    if (!currentAnswer && !isAutoSubmit) return;
 
     try {
-      setIsSubmitting(true); // Set submission flag
+      submissionLockRef.current = true;
+      setIsSubmitting(true);
+      setCanSubmit(false);
+      setIsQuestionTimerActive(false);
 
-      const currentAnswer = userAnswer.trim(); // Store current answer
-      setUserAnswer(""); // Clear the input immediately to prevent resubmission
+      const qnaId = currentQuestionRef.current;
+
+      setUserAnswer("");
 
       const token = getAccessToken();
       const response = await fetch(
@@ -184,8 +116,8 @@ export const Interview = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            qna_id: currentQuestionId,
-            user_answer: userAnswer.trim() || "No answer provided.",
+            qna_id: qnaId,
+            user_answer: currentAnswer || "No answer provided.",
             session_id: sessionStorage.getItem("interviewSessionId"),
           }),
         }
@@ -194,41 +126,29 @@ export const Interview = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Add the user's answer to chat
         setChat((prev) => [
           ...prev,
-          {
-            sender: "User",
-            message: currentAnswer || "No answer provided.",
-          },
+          { sender: "User", message: currentAnswer },
         ]);
 
-        // setUserAnswer(""); // Reset the input field for the next answer
-        setIsQuestionTimerRunning(false); // Reset the question timer
-        setQuestionTimer(60); // Reset timer to 60 seconds
-
-        // If there's a next question, add it and update the state
         if (data.next_question) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          setCurrentQuestionId(data.next_qna_id);
+          currentQuestionRef.current = data.next_qna_id;
+
           setChat((prev) => [
             ...prev,
             { sender: "Bot", message: data.next_question },
           ]);
 
-          // showToast("Next quesion incoming", "info");
-          // Update the question ID with the new one from the response (next_qna_id)
-          setCurrentQuestionId(data.next_qna_id); // Update with next_qna_id
-          // setUserAnswer(""); // Clear the user input field
-          setIsQuestionTimerRunning(true); // Reset question timer
-          // setQuestionTimer(60); // Reset the question timer to 60 seconds
+          setQuestionTimer(60);
+          setCanSubmit(true);
 
-          // Optionally restart mic if it's enabled
-          if (isRecording) {
-            handleMicClick();
-            showToast("Recording Started", "info");
-          }
+          setTimeout(() => {
+            setIsQuestionTimerActive(true);
+          }, 500);
         } else if (data.is_complete) {
-          // End the interview if it's marked as complete
-          showToast("Ending Interview", "info");
+          showToast("Ending Interview", "default");
           handleEndInterview();
         }
       } else {
@@ -236,130 +156,44 @@ export const Interview = () => {
       }
     } catch (error) {
       console.error("Error submitting answer:", error);
-      showToast(error.message || "Failed to submit answer. Please try again.");
-      // alert(error.message || "Failed to submit answer. Please try again.");
+      showToast(error.message || "Failed to submit answer");
+      setUserAnswer(currentAnswer); // Restore answer if submission failed
     } finally {
-      setIsSubmitting(false); // Reset submission flag
+      setIsSubmitting(false);
+      submissionLockRef.current = false;
     }
   };
 
-  // const handleEndInterview = async () => {
-  //   try {
-  //     const token = getAccessToken();
-  //     const storedSessionId = sessionStorage.getItem("interviewSessionId");
-
-  //     await fetch(`${import.meta.env.VITE_API_URL}/qna/end-interview/`, {
-  //       method: "POST",
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         session_id: storedSessionId,
-  //       }),
-  //     });
-  //     showToast("Interview Ended", "info");
-  //     sessionStorage.removeItem("interviewSessionId");
-  //     setShowEndModal(true);
-  //   } catch (error) {
-  //     console.error("Error ending interview:", error);
-  //   }
-  // };
-
-  // Interview timer effect
-  const handleEndInterview = async (isTimerExpired = false) => {
+  const handleEndInterview = async () => {
     try {
-      // First, stop any active recording
       if (isRecording) {
         recognitionRef.current?.stop();
         setIsRecording(false);
       }
 
-      // Clear all timers
-      setIsQuestionTimerRunning(false);
-
-      // If there's a pending answer, submit it first
-      if (userAnswer.trim()) {
-        await handleSubmitAnswer(true);
-      }
-
       const token = getAccessToken();
       const storedSessionId = sessionStorage.getItem("interviewSessionId");
 
-      if (!storedSessionId) {
-        showToast("No active interview session found.", "warning");
-        setShowEndModal(true);
-        return;
-      }
+      await fetch(`${import.meta.env.VITE_API_URL}/qna/end-interview/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: storedSessionId,
+        }),
+      });
 
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/qna/end-interview/`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              session_id: storedSessionId,
-              end_reason: isTimerExpired ? "timer_expired" : "user_ended",
-              last_question_id: currentQuestionId,
-            }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to end interview properly");
-        }
-
-        // Update chat with end message
-        setChat((prev) => [
-          ...prev,
-          {
-            sender: "Bot",
-            message: isTimerExpired
-              ? "Interview time has expired. Thank you for your participation!"
-              : "Interview ended. Thank you for your participation!",
-          },
-        ]);
-
-        // Clean up interview state
-        setIsInterviewStarted(false);
-        setCurrentQuestionId(null);
-        setUserAnswer("");
-
-        // Clear session storage
-        sessionStorage.removeItem("interviewSessionId");
-
-        // Show appropriate notification
-        showToast(
-          isTimerExpired
-            ? "Interview time expired"
-            : "Interview ended successfully",
-          isTimerExpired ? "warning" : "info"
-        );
-
-        // Show end modal
-        setShowEndModal(true);
-      } catch (error) {
-        console.error("Error in end-interview API call:", error);
-        showToast(error.message || "Error ending interview", "error");
-
-        // Show end modal even if API fails
-        setShowEndModal(true);
-      }
-    } catch (error) {
-      console.error("Error in handleEndInterview:", error);
-      showToast(
-        "Error during interview completion. Please contact support.",
-        "error"
-      );
+      sessionStorage.removeItem("interviewSessionId");
       setShowEndModal(true);
+      showToast("Interview Ended", "default");
+    } catch (error) {
+      console.error("Error ending interview:", error);
+      showToast("Error ending interview", "default");
     }
   };
+
   useEffect(() => {
     let interval;
     if (isInterviewStarted && interviewTimer > 0) {
@@ -367,6 +201,7 @@ export const Interview = () => {
         setInterviewTimer((prev) => {
           if (prev <= 1) {
             handleEndInterview(true);
+            return 0;
           }
           return prev - 1;
         });
@@ -375,45 +210,37 @@ export const Interview = () => {
     return () => clearInterval(interval);
   }, [isInterviewStarted, interviewTimer]);
 
-  // Question timer effect
   useEffect(() => {
     let interval;
-    if (isQuestionTimerRunning && questionTimer > 0) {
+    if (isQuestionTimerActive && questionTimer > 0 && canSubmit) {
       interval = setInterval(() => {
         setQuestionTimer((prev) => {
-          if (prev <= 1) {
-            // setUserAnswer("");
+          if (prev <= 1 && canSubmit) {
             handleSubmitAnswer(true);
+            return 0;
           }
           return prev - 1;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isQuestionTimerRunning, questionTimer]);
+  }, [isQuestionTimerActive, questionTimer, canSubmit]);
 
-  // Chat scroll effect
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  // Speech recognition handlers
   const handleMicClick = async () => {
-    setIsQuestionTimerRunning(true);
+    if (!canSubmit) return;
 
     if (isRecording) {
+      recognitionRef.current?.stop();
       setIsRecording(false);
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
       return;
     }
 
     if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
       showToast("Speech recognition not supported in this browser.");
-      // alert("Speech recognition not supported in this browser.");
       return;
     }
 
@@ -439,16 +266,11 @@ export const Interview = () => {
 
       recognitionRef.current.start();
       setIsRecording(true);
+      setIsQuestionTimerActive(true);
     } catch (error) {
       console.error("Error starting speech recognition:", error);
-      showToast("Error starting speech recognition. Please try again.");
-      // alert("Error starting speech recognition. Please try again.");
+      showToast("Error starting speech recognition");
     }
-  };
-
-  const handleTextAreaChange = (e) => {
-    setIsQuestionTimerRunning(true);
-    setUserAnswer(e.target.value);
   };
 
   const formatTime = (seconds) => {
@@ -501,7 +323,7 @@ export const Interview = () => {
         title="Interview Completed"
         footer={
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => navigate("/user/dashboard")}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Close
@@ -523,7 +345,7 @@ export const Interview = () => {
                 </span>
               </div>
               <button
-                onClick={handleEndInterview}
+                onClick={() => handleEndInterview(false)}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               >
                 End Interview
@@ -544,10 +366,10 @@ export const Interview = () => {
               </div>
               <div
                 className={`px-6 py-2 text-white rounded-lg ${
-                  isQuestionTimerRunning ? "bg-blue-500" : "bg-gray-400"
+                  isQuestionTimerActive ? "bg-blue-500" : "bg-gray-400"
                 }`}
               >
-                {isQuestionTimerRunning ? "Timer Running" : "Timer Ready"}
+                {isQuestionTimerActive ? "Timer Running" : "Timer Paused"}
               </div>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -559,73 +381,50 @@ export const Interview = () => {
           </div>
         )}
 
-        {/* Chat Section */}
-        {isInterviewStarted && (
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="h-80 overflow-y-auto p-2 space-y-4">
-              {chat.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${
-                    message.sender === "Bot" ? "justify-start" : "justify-end"
-                  } items-start gap-3`}
-                >
-                  {message.sender === "Bot" && (
-                    <UserCircle2 className="h-10 w-10 text-blue-500 flex-shrink-0" />
-                  )}
-                  <div
-                    className={`max-w-[80%] p-4 rounded-xl shadow-sm ${
-                      message.sender === "Bot"
-                        ? "bg-blue-50 text-gray-800"
-                        : "bg-blue-500 text-white"
-                    }`}
-                  >
-                    {message.message}
-                  </div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Input Section */}
-            <div className="border-t border-gray-100 p-4 bg-gray-50">
-              <textarea
-                ref={textAreaRef}
-                value={userAnswer}
-                onChange={handleTextAreaChange}
-                placeholder="Start typing your answer..."
-                className="w-full h-24 p-4 mb-1 border rounded-xl resize-none transition-colors duration-200 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleMicClick}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
-                    isRecording
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-green-500 hover:bg-green-600"
-                  } text-white`}
-                >
-                  <Mic className="h-5 w-5" />
-                  {isRecording ? "Stop Recording" : "Start Recording"}
-                </button>
-                <button
-                  onClick={() => handleSubmitAnswer(false)}
-                  disabled={!userAnswer.trim()}
-                  className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
-                    userAnswer.trim()
-                      ? "bg-blue-500 hover:bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                >
-                  Submit Answer
-                </button>
+        {/* Chat Messages */}
+        <div className="space-y-4">
+          {chat.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                message.sender === "User" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-xs p-3 rounded-xl ${
+                  message.sender === "User"
+                    ? "bg-blue-100 text-right"
+                    : "bg-gray-100 text-left"
+                }`}
+              >
+                <p>{message.message}</p>
               </div>
             </div>
+          ))}
+          <div ref={chatEndRef}></div>
+        </div>
+
+        {/* Answer Input and Mic Button */}
+        {isInterviewStarted && (
+          <div className="flex items-center gap-4 mt-6">
+            <textarea
+              ref={textAreaRef}
+              className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none"
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              placeholder="Type your answer here..."
+            />
+            <button
+              onClick={handleMicClick}
+              className={`p-4 rounded-full ${
+                isRecording ? "bg-red-500" : "bg-gray-500"
+              } text-white`}
+            >
+              <Mic className="h-6 w-6" />
+            </button>
           </div>
         )}
       </div>
     </div>
   );
 };
-
-export default Interview;

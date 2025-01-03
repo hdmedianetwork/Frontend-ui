@@ -17,9 +17,9 @@ const Register = () => {
     status: "active",
   });
 
-  const showToast = (message, type = "error") => {
+  const showToast = (message, type = "default") => {
     new Toast({
-      position: "bottom-right",
+      position: "top-right",
       toastMsg: message,
       autoCloseTime: 1000,
       canClose: true,
@@ -47,7 +47,7 @@ const Register = () => {
     // Password validation
     const trimmedPassword = formData.password.trim();
     if (!trimmedPassword || trimmedPassword.length < 8) {
-      showToast("Password must be at least 8 characters long", "warning");
+      showToast("Password must be at least 8 characters long", "default");
       // setError("Password must be at least 8 characters long.");
       setLoading(false);
       return;
@@ -56,7 +56,7 @@ const Register = () => {
     try {
       const registrationData = await createUser(formData);
       console.log("Registration successful:", registrationData);
-      showToast("Registration successful Redirecting...", "success");
+      showToast("Registration successful Redirecting...", "default");
 
       if (registrationData.success) {
         try {
@@ -69,7 +69,7 @@ const Register = () => {
             } else {
               navigate("/user/dashboard");
             }
-          }, 1000);
+          }, 1200);
           // Redirect based on role
         } catch (userInfoError) {
           console.error("Error fetching user info:", userInfoError);
@@ -141,12 +141,13 @@ const Register = () => {
       {/* Form Section - Right Half */}
       <div className="w-full bg-bg-color flex items-center justify-center p-8 animate-fadeIn">
         <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-          <div className="logo">
-            <h1 className="text-2xl font-head text-d-color mb-6 text-center">
+          <div className="logo flex items-center mb-2">
+            <img src="/assets/logo.png" alt="" height={"45px"} width={"75px"} />
+            <h1 className="text-2xl font-head text-d-color  text-center ">
               AI INTERVIEW CHATBOT
             </h1>
           </div>
-          <h2 className="text-2xl font-head text-d-color mb-6 text-center">
+          <h2 className="text-2xl font-head text-d-color mb-2 text-center">
             Register
           </h2>
           {/* {error && (
@@ -217,6 +218,11 @@ const Register = () => {
             Already have an account?{" "}
             <Link to="/login" className="text-p-color hover:text-d-color">
               Login
+            </Link>
+          </p>
+          <p className="mt-2 text-center font-text text-s-color">
+            <Link to="/forgot" className="text-p-color hover:text-d-color">
+              Forgot Password?
             </Link>
           </p>
         </div>

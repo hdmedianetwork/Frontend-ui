@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { getUserData } from "../../services/api";
+import { User, Mail, Shield } from "lucide-react";
 
 const HorizontalNavbar = () => {
   const navigate = useNavigate();
@@ -76,7 +77,8 @@ const HorizontalNavbar = () => {
       </div>
 
       {/* Center section - App name */}
-      <div className="w-1/3 flex justify-center">
+      <div className="w-1/3 flex justify-center items-center gap-3">
+        <img src="/assets/logo.png" alt="" height={"45px"} width={"45px"} />
         <h1 className="text-xl font-bold">AI</h1>
       </div>
 
@@ -91,7 +93,7 @@ const HorizontalNavbar = () => {
             className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <img
-              src={user.profileImage}
+              src="/assets/profile.png"
               alt="Profile"
               className="h-full w-full object-cover"
             />
@@ -99,17 +101,29 @@ const HorizontalNavbar = () => {
 
           {/* Profile dropdown */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg  border border-gray-200">
-              <div className="px-4 py-3 border-b border-gray-200 flex flex-col items-start justify-center gap-5">
-                <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <p className="text-sm text-gray-500">{user.role}</p>
-                <p className="text-sm text-gray-500">{user.email}</p>
+            <div className="absolute right-5 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 ">
+              <div className="px-4 py-3 border-b border-gray-200 flex flex-col items-start justify-center gap-5 ">
+                <div className="flex gap-3">
+                  <User className="text-p-color" size={20} />
+                  <p className="text-sm font-medium text-gray-900">
+                    {user.name}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Shield className="text-gray-500" size={18} />
+                  <p className="text-sm text-gray-500">{user.role}</p>
+                </div>
+                <div className="flex gap-3">
+                  <Mail className="text-gray-500" size={18} />
+                  <p className="text-sm text-gray-500  break-words max-w-full">
+                    {user.email}
+                  </p>
+                </div>
                 <Button
                   onClick={() => {
                     const targetPath = location.pathname.startsWith("/admin")
                       ? "/admin/profile"
                       : "/user/profile";
-
                     navigate(targetPath);
                   }}
                 >
