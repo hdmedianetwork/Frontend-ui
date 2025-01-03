@@ -5,11 +5,13 @@ import {
   Calendar,
   Settings,
   LogOut,
+  FileText,
   FileChartColumnIncreasing,
   IdCard,
   MessageSquareQuote,
   UserCheck,
   IndianRupee,
+  Handshake,
   X,
   UserPen,
 } from "lucide-react";
@@ -85,17 +87,17 @@ export const Navbar = ({ toggleNavbar }) => {
         <ul className="space-y-4">
           {isAdmin ? (
             <>
-              <NavItem icon={<Home />} text="Profile" path="/admin/profile" />
+              <NavItem icon={<Home />} text="Dashboard" path="/admin/profile" />
               <NavItem
                 icon={<FileChartColumnIncreasing />}
                 text="Performance"
                 path="/admin/history"
               />
-              <NavItem
+              {/* <NavItem
                 icon={<Users />}
                 text="User Information"
                 path="/admin/information"
-              />
+              /> */}
               <NavItem
                 icon={<IdCard />}
                 text="User Permission"
@@ -106,16 +108,16 @@ export const Navbar = ({ toggleNavbar }) => {
                 text="User Feedback"
                 path="/admin/response"
               />
-              <NavItem
+              {/* <NavItem
                 icon={<UserCheck />}
                 text="Subscriptions"
                 path="/admin/subscription"
-              />
-              <NavItem
+              /> */}
+              {/* <NavItem
                 icon={<IndianRupee />}
                 text="Transaction History"
                 path="/admin/transaction"
-              />
+              /> */}
             </>
           ) : (
             <>
@@ -126,12 +128,12 @@ export const Navbar = ({ toggleNavbar }) => {
               />
               <NavItem icon={<UserPen />} text="Profile" path="/user/profile" />
               <NavItem
-                icon={<Settings />}
+                icon={<FileText />}
                 text="Upload Resume"
                 path="/user/upload-Resume"
               />
               <NavItem
-                icon={<Settings />}
+                icon={<Calendar />}
                 text="Schedule"
                 path="/user/schedule"
               />
@@ -141,7 +143,7 @@ export const Navbar = ({ toggleNavbar }) => {
                 path="/user/payment"
               /> */}
               <NavItem
-                icon={<Calendar />}
+                icon={<Handshake />}
                 text="Interview"
                 path="/user/interview"
               />

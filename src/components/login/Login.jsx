@@ -14,7 +14,7 @@ const Login = () => {
 
   const showToast = (message, type = "default") => {
     new Toast({
-      position: "top-left",
+      position: "top-center",
       toastMsg: message,
       autoCloseTime: 1000,
       canClose: true,
@@ -109,6 +109,11 @@ const Login = () => {
               label="Password"
               onChange={(e) => setPassword(e.target.value)}
             />
+            <p className=" ml-56 text-center font-text text-s-color">
+              <Link to="/forgot" className="text-p-color hover:text-d-color">
+                Forgot Password?
+              </Link>
+            </p>
             <button
               type="submit"
               className="w-full bg-p-color text-bg-color py-2 rounded font-text hover:bg-s-color transition-colors"

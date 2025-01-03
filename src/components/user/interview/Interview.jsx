@@ -1,33 +1,94 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, UserCircle2, PlayCircle, Clock } from "lucide-react";
+import { Mic, UserCircle2, PlayCircle, Clock, Send, X } from "lucide-react";
 import { CustomModal } from "../../../ui/CustomModal";
 import { getAccessToken } from "../../../services/api";
 import Toast from "typescript-toastify";
 import { useNavigate } from "react-router-dom";
+// import { ScaleLoader } from "react-spinners/ScaleLoader";
+
+const RecordingModal = ({ isOpen, onClose }) => {
+  return (
+    <CustomModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Recording in Progress"
+    >
+      <div className="p-8 flex flex-col items-center justify-center gap-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-0 right-0 p-2 text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <X className="h-6 w-6" />
+        </button>
+        <div className="relative w-20 h-20">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="flex gap-1">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-3 h-8 bg-blue-500 rounded-full animate-pulse"
+                  style={{
+                    animationDelay: `${i * 0.15}s`,
+                    animationDuration: "1s",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <p className="text-lg text-gray-700 font-medium">
+          Listening to your response...
+        </p>
+        <button
+          onClick={onClose}
+          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+        >
+          Stop Recording
+        </button>
+      </div>
+    </CustomModal>
+  );
+};
 
 export const Interview = () => {
   const navigate = useNavigate();
 
   // Core state
+  // const [showInstructions, setShowInstructions] = useState(true);
+  // const [showEndModal, setShowEndModal] = useState(false);
+  // const [isInterviewStarted, setIsInterviewStarted] = useState(false);
+  // const [sessionId, setSessionId] = useState(null);
+  // const [currentQuestionId, setCurrentQuestionId] = useState(null);
+  // const [chat, setChat] = useState([]);
+
   const [showInstructions, setShowInstructions] = useState(true);
   const [showEndModal, setShowEndModal] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
   const [chat, setChat] = useState([]);
-
-  // Answer handling state
   const [userAnswer, setUserAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canSubmit, setCanSubmit] = useState(true);
-
-  // Timer state
   const [interviewTimer, setInterviewTimer] = useState(30 * 60);
   const [questionTimer, setQuestionTimer] = useState(60);
   const [isQuestionTimerActive, setIsQuestionTimerActive] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [showRecordingModal, setShowRecordingModal] = useState(false);
+  const [isTypingTimerStarted, setIsTypingTimerStarted] = useState(false);
+
+  // Answer handling state
+  // const [userAnswer, setUserAnswer] = useState("");
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [canSubmit, setCanSubmit] = useState(true);
+
+  // Timer state
+  // const [interviewTimer, setInterviewTimer] = useState(30 * 60);
+  // const [questionTimer, setQuestionTimer] = useState(60);
+  // const [isQuestionTimerActive, setIsQuestionTimerActive] = useState(false);
 
   // Recording state
-  const [isRecording, setIsRecording] = useState(false);
+  // const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef(null);
   const textAreaRef = useRef(null);
   const chatEndRef = useRef(null);
@@ -212,7 +273,12 @@ export const Interview = () => {
 
   useEffect(() => {
     let interval;
-    if (isQuestionTimerActive && questionTimer > 0 && canSubmit) {
+    if (
+      isQuestionTimerActive &&
+      questionTimer > 0 &&
+      canSubmit &&
+      isTypingTimerStarted
+    ) {
       interval = setInterval(() => {
         setQuestionTimer((prev) => {
           if (prev <= 1 && canSubmit) {
@@ -224,11 +290,63 @@ export const Interview = () => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isQuestionTimerActive, questionTimer, canSubmit]);
+  }, [isQuestionTimerActive, questionTimer, canSubmit, isTypingTimerStarted]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
+
+  // const handleMicClick = async () => {
+  //   if (!canSubmit) return;
+
+  //   if (isRecording) {
+  //     recognitionRef.current?.stop();
+  //     setIsRecording(false);
+  //     return;
+  //   }
+
+  //   if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+  //     showToast("Speech recognition not supported in this browser.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const SpeechRecognition =
+  //       window.SpeechRecognition || window.webkitSpeechRecognition;
+  //     recognitionRef.current = new SpeechRecognition();
+  //     recognitionRef.current.continuous = true;
+  //     recognitionRef.current.interimResults = true;
+
+  //     recognitionRef.current.onresult = (event) => {
+  //       let finalTranscript = "";
+  //       for (let i = event.resultIndex; i < event.results.length; i++) {
+  //         const transcript = event.results[i][0].transcript;
+  //         if (event.results[i].isFinal) {
+  //           finalTranscript += transcript + " ";
+  //         }
+  //       }
+  //       if (finalTranscript) {
+  //         setUserAnswer((prev) => prev + finalTranscript);
+  //       }
+  //     };
+
+  //     recognitionRef.current.start();
+  //     setIsRecording(true);
+  //     setIsQuestionTimerActive(true);
+  //   } catch (error) {
+  //     console.error("Error starting speech recognition:", error);
+  //     showToast("Error starting speech recognition");
+  //   }
+  // };
+
+  // Monitor userAnswer changes
+
+  useEffect(() => {
+    if (!isTypingTimerStarted && userAnswer.trim().length > 0) {
+      setIsTypingTimerStarted(true);
+      setIsQuestionTimerActive(true);
+    }
+  }, [userAnswer, isTypingTimerStarted]);
 
   const handleMicClick = async () => {
     if (!canSubmit) return;
@@ -236,6 +354,7 @@ export const Interview = () => {
     if (isRecording) {
       recognitionRef.current?.stop();
       setIsRecording(false);
+      setShowRecordingModal(false);
       return;
     }
 
@@ -266,11 +385,17 @@ export const Interview = () => {
 
       recognitionRef.current.start();
       setIsRecording(true);
+      setShowRecordingModal(true);
       setIsQuestionTimerActive(true);
     } catch (error) {
       console.error("Error starting speech recognition:", error);
       showToast("Error starting speech recognition");
     }
+  };
+
+  const handleManualSubmit = async () => {
+    await handleSubmitAnswer(false);
+    setUserAnswer("");
   };
 
   const formatTime = (seconds) => {
@@ -280,148 +405,184 @@ export const Interview = () => {
   };
 
   return (
-    <div className="min-h-56 bg-gray-50 p-4 font-sans">
+    // <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-96 bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Instructions Modal */}
       <CustomModal
         isOpen={showInstructions}
         onClose={() => setShowInstructions(false)}
-        title="Interview Instructions"
+        title={
+          <div className="text-2xl font-bold text-gray-800">
+            Welcome to Your Interview
+          </div>
+        }
         footer={
           <button
             onClick={handleStartInterview}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-semibold shadow-lg"
           >
-            Start Interview
+            Begin Interview
           </button>
         }
       >
-        <div className="space-y-4">
-          <p className="text-gray-700">
-            Welcome to your interview! Here are some important points:
-          </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li className="text-gray-600">
-              The interview will last 30 minutes
-            </li>
-            <li className="text-gray-600">
-              You have 60 seconds to answer each question
-            </li>
-            <li className="text-gray-600">
-              You can type your answer or use voice recording
-            </li>
-            <li className="text-gray-600">
-              Answers will auto-submit after 60 seconds
-            </li>
-          </ul>
+        <div className="space-y-6 p-4">
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+            <h3 className="text-lg font-semibold text-blue-800 mb-4">
+              Interview Guidelines
+            </h3>
+            <ul className="space-y-4">
+              {[
+                "Total duration: 30 minutes",
+                "60 seconds per question",
+                "Voice recording or typing available",
+                "Auto-submission after timer ends",
+              ].map((item, index) => (
+                <li key={index} className="flex items-center text-gray-700">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </CustomModal>
 
-      {/* End Interview Modal */}
+      <RecordingModal
+        isOpen={showRecordingModal}
+        onClose={() => {
+          setShowRecordingModal(false);
+          setIsRecording(false);
+          recognitionRef.current?.stop();
+        }}
+      />
+
+      {/* End Interview Modal - Updated color */}
       <CustomModal
         isOpen={showEndModal}
         onClose={() => setShowEndModal(false)}
-        title="Interview Completed"
+        title={
+          <div className="text-2xl font-bold text-gray-800">
+            Interview Complete
+          </div>
+        }
         footer={
           <button
             onClick={() => navigate("/user/dashboard")}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-semibold shadow-lg"
           >
-            Close
+            Return to Dashboard
           </button>
         }
       >
-        <p className="text-gray-700">Thank you for completing the interview!</p>
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <div className="w-8 h-8 text-blue-600">✓</div>
+          </div>
+          <p className="text-lg text-gray-700">
+            Congratulations on completing your interview!
+          </p>
+        </div>
       </CustomModal>
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Interview Timer */}
+      {/* <div className="max-w-4xl mx-auto p-6"> */}
+      <div className="max-w-7xl mx-auto">
         {isInterviewStarted && (
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center gap-4">
-                <Clock className="h-6 w-6 text-blue-500" />
-                <span className="text-lg font-medium">
-                  Interview Time: {formatTime(interviewTimer)}
-                </span>
+          <div className="space-y-6">
+            {/* Timer Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-6 w-6 text-blue-600" />
+                    <span className="text-lg font-semibold">
+                      Total Time: {formatTime(interviewTimer)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleEndInterview(false)}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all text-sm font-medium"
+                  >
+                    End Interview
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => handleEndInterview(false)}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                End Interview
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Question Timer */}
-        {isInterviewStarted && (
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center gap-4">
-                <PlayCircle className="h-6 w-6 text-blue-500" />
-                <span className="text-lg font-medium text-red-600">
-                  Question Time: {formatTime(questionTimer)}
-                </span>
-              </div>
-              <div
-                className={`px-6 py-2 text-white rounded-lg ${
-                  isQuestionTimerActive ? "bg-blue-500" : "bg-gray-400"
-                }`}
-              >
-                {isQuestionTimerActive ? "Timer Running" : "Timer Paused"}
+              <div className="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-6 w-6 text-blue-600" />
+                      <span className="text-lg font-semibold text-blue-600">
+                        Question Time: {formatTime(questionTimer)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(questionTimer / 60) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(questionTimer / 60) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
 
-        {/* Chat Messages */}
-        <div className="space-y-4">
-          {chat.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                message.sender === "User" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-xs p-3 rounded-xl ${
-                  message.sender === "User"
-                    ? "bg-blue-100 text-right"
-                    : "bg-gray-100 text-left"
-                }`}
-              >
-                <p>{message.message}</p>
+            {/* Chat Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="h-80 overflow-y-auto mb-6 scroll-smooth">
+                <div className="space-y-6">
+                  {chat.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex ${
+                        message.sender === "User"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-5xl p-4 rounded-2xl ${
+                          message.sender === "User"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        <p className="leading-relaxed">{message.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <textarea
+                  ref={textAreaRef}
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  placeholder="Type your answer here..."
+                  className="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-24 transition-all"
+                />
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handleMicClick}
+                    className={`p-4 rounded-xl ${
+                      isRecording
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    } text-white transition-all transform hover:scale-105`}
+                  >
+                    <Mic className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={handleManualSubmit}
+                    className="p-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all transform hover:scale-105"
+                  >
+                    <Send className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
-          <div ref={chatEndRef}></div>
-        </div>
-
-        {/* Answer Input and Mic Button */}
-        {isInterviewStarted && (
-          <div className="flex items-center gap-4 mt-6">
-            <textarea
-              ref={textAreaRef}
-              className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none"
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Type your answer here..."
-            />
-            <button
-              onClick={handleMicClick}
-              className={`p-4 rounded-full ${
-                isRecording ? "bg-red-500" : "bg-gray-500"
-              } text-white`}
-            >
-              <Mic className="h-6 w-6" />
-            </button>
           </div>
         )}
       </div>

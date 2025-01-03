@@ -289,34 +289,43 @@ export const updateProfilePath = async (profilePath) => {
   }
 };
 
-export const uploadResume = async (file) => {
+export const uploadResume = async (file, jobTitle, jobDescription) => {
   try {
     const token = getAccessToken();
     if (!token) {
       throw new Error("No access token found");
     }
 
+    // Create a new FormData instance to send the data in multipart/form-data format
     const formData = new FormData();
+
+    // Append the file to the FormData
     formData.append("file", file);
 
+    // Append job title and job description to the FormData
+    formData.append("job_title", jobTitle);
+    formData.append("job_description", jobDescription);
+
+    // Append user ID if available
     const userData = getUserData();
     if (userData && userData.id) {
       formData.append("user_id", userData.id);
     }
 
+    // Send the request with the updated form data
     const response = await fetch(`${BASE_URL}/qna/upload-resume`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
       },
-      body: formData,
+      body: formData, // Send the FormData as the request body
     });
 
     const data = await response.json();
 
     if (response.status === 200) {
-      return data;
+      return data; // Return the response data on success
     }
 
     throw new Error(data.message || "Failed to upload resume");

@@ -42,8 +42,9 @@ body {
   background-position: center;
   filter: blur(10px);
   filter: brightness(0.5);
-  z-index: 1;
+  z-index: 0;
 }
+
 .two::before {
   content: "";
   position: absolute;
@@ -57,7 +58,7 @@ body {
   background-position: center;
   filter: blur(10px);
   filter: brightness(0.5);
-  z-index: 1;
+  z-index: 0;
 }
 .three::before {
   font-family: "Times New Roman", Times, serif;
@@ -73,7 +74,7 @@ body {
   background-position: center;
   filter: blur(10px);
   filter: brightness(0.5);
-  z-index: 1;
+  z-index: 0;
 }
 
 /* Add this CSS to your styles (e.g., in the global stylesheet or use Tailwind's @layer directive) */
@@ -117,7 +118,7 @@ button:hover {
 }
 
 button.bg-p-color {
-  background-color: #ff6347;
+  background-color: var(--p-color);
   color: #fff;
 }
 

@@ -14,6 +14,9 @@ export const Resume = () => {
   const [uploadedFileDetails, setUploadedFileDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+
   const showToast = (message, type = "default") => {
     new Toast({
       position: "top-center",
@@ -37,7 +40,8 @@ export const Resume = () => {
         setSuccessMessage("");
 
         try {
-          const response = await uploadResume(file);
+          // Pass jobTitle and jobDescription to the uploadResume function
+          const response = await uploadResume(file, jobTitle, jobDescription);
           console.log(response);
 
           setUploadedFileDetails(response);
@@ -45,18 +49,15 @@ export const Resume = () => {
           setIsLoading(false);
 
           if (response.error === null) {
-            showToast("File uploaded scuccessfully", "default");
-            // setSuccessMessage("Thank you for your feedback!");
+            showToast("File uploaded successfully", "default");
           }
         } catch (err) {
           showToast(err.message);
-          // setError(err.message);
           setIsLoading(false);
           setSelectedFile(null);
         }
       } else {
         showToast("Please upload a file in .pdf or .docx format.", "default");
-        // setError("Please upload a file in .pdf or .docx format.");
         setSelectedFile(null);
       }
     }
@@ -83,6 +84,7 @@ export const Resume = () => {
     const file = event.target.files?.[0];
     handleFile(file);
   };
+
   const removeFile = () => {
     setSelectedFile(null);
     setUploadedFileDetails(null);
@@ -90,9 +92,8 @@ export const Resume = () => {
   };
 
   const validateFileAndNavigate = (path) => {
-    if (!selectedFile) {
-      showToast("Please upload your resume before proceeding.", "default");
-      // setError("Please upload your resume before proceeding.");
+    if (!selectedFile || !jobTitle || !jobDescription) {
+      showToast("Please complete all fields before proceeding.", "default");
       return;
     }
     window.location.href = path;
@@ -111,6 +112,44 @@ export const Resume = () => {
             Tell us about the position you're interested in and upload your
             resume.
           </p>
+        </div>
+
+        {/* Job Title and Job Description Section */}
+        <div className="bg-white rounded-2xl p-8 shadow-md">
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="job-title"
+                className="block text-gray-700 font-medium"
+              >
+                Job Title
+              </label>
+              <input
+                id="job-title"
+                type="text"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                className="mt-2 block w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter the job title"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="job-description"
+                className="block text-gray-700 font-medium"
+              >
+                Job Description
+              </label>
+              <textarea
+                id="job-description"
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                className="mt-2 block w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+                placeholder="Enter the job description"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Upload Section */}
@@ -183,29 +222,10 @@ export const Resume = () => {
               <p className="text-blue-700">Uploading resume...</p>
             </div>
           )}
-
-          {/* {error && (
-            <div className="mt-4 p-4 bg-red-50 rounded-lg flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
-          {successMessage && (
-            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
-              {successMessage}
-            </div>
-          )} */}
         </div>
 
         {/* Action Buttons */}
         <div className="bg-white rounded-2xl p-4 shadow-md flex justify-end gap-4">
-          {/* <Button
-            variant="primary"
-            onClick={() => validateFileAndNavigate("/user/interview")}
-          >
-            {" "}
-            Submit Resume
-          </Button> */}
           <button
             onClick={() => validateFileAndNavigate("/user/schedule")}
             disabled={true}

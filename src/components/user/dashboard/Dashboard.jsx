@@ -199,7 +199,8 @@ export const Dashboard = () => {
               onClick={() => handleDownloadReport(interview.report)}
               className="w-full flex flex-col items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <FileText size={48} className="text-blue-600" />
+              {/* <FileText size={48} className="text-red-700" /> */}
+              <img src="/assets/pdf.jpg" alt="" width={"40px"} />
               <div className="text-center">
                 <p className="font-medium text-gray-900">{interview.report}</p>
                 <p className="text-sm text-gray-500">{interview.date}</p>

@@ -220,11 +220,6 @@ const Register = () => {
               Login
             </Link>
           </p>
-          <p className="mt-2 text-center font-text text-s-color">
-            <Link to="/forgot" className="text-p-color hover:text-d-color">
-              Forgot Password?
-            </Link>
-          </p>
         </div>
       </div>
     </div>

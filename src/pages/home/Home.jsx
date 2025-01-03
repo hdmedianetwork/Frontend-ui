@@ -350,13 +350,13 @@ const Home = () => {
 
             {/* GIF Section */}
             <div className="w-full md:w-1/2 flex justify-center px-4">
-              <img
+              {/* <img
                 src="/assets/chat.gif"
                 alt="Chatbot GIF"
                 className="max-w-full h-auto"
                 // height={"400px"}
                 // width={"400px"}
-              />
+              /> */}
             </div>
           </div>
         </div>
@@ -466,11 +466,11 @@ const Home = () => {
 
               {/* Right Side Image */}
               <div className="w-full md:w-1/2 flex justify-center md:justify-end">
-                <img
+                {/* <img
                   src="/assets/know.png"
                   alt="Chatbot Assistant"
                   className="max-w-full h-auto"
-                />
+                /> */}
               </div>
             </div>
           </div>

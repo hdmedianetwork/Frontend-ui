@@ -77,9 +77,9 @@ const HorizontalNavbar = () => {
       </div>
 
       {/* Center section - App name */}
-      <div className="w-1/3 flex justify-center items-center gap-3">
-        <img src="/assets/logo.png" alt="" height={"45px"} width={"45px"} />
-        <h1 className="text-xl font-bold">AI</h1>
+      <div className="w-1/3 flex justify-center items-center">
+        <img src="/assets/logo.png" alt="" height={"50px"} width={"50px"} />
+        {/* <h1 className="text-xl font-bold">AI</h1> */}
       </div>
 
       {/* Right section - Page name and Profile */}

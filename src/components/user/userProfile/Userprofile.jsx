@@ -287,9 +287,9 @@ export const Userprofile = () => {
           className="hover:shadow-lg transition-shadow"
         >
           <ul className="space-y-3">
-            <li className="flex items-center gap-3 text-gray-700">
+            {/* <li className="flex items-center gap-3 text-gray-700">
               <Lock size={16} /> <span>Change Password</span>
-            </li>
+            </li> */}
             <li className="flex items-center gap-3 text-gray-700">
               <Mail size={16} /> <span>Update Email</span>
             </li>
