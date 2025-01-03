@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../../ui/Card";
 
 // Add a fade-in animation to each section
-import "./Home.css"; // Make sure to import your custom CSS (explained below)
+// import "./Home.css"; // Make sure to import your custom CSS (explained below)
 
 const Home = () => {
   const [selectedOption, setSelectedOption] = useState("values");
